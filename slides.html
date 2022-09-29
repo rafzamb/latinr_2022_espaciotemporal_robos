@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Predicción de delitos mediante un enfoque espaciotemporal</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Rafael Zambrano" />
+    <script src="slides_files/header-attrs-2.14/header-attrs.js"></script>
+    <link href="slides_files/panelset-0.2.6/panelset.css" rel="stylesheet" />
+    <script src="slides_files/panelset-0.2.6/panelset.js"></script>
+    <script src="slides_files/xaringanExtra-progressBar-0.0.1/progress-bar.js"></script>
+    <link rel="stylesheet" href="latinR.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: center
+
+
+
+
+&lt;br&gt;
+
+
+
+# Predicción de delitos mediante un enfoque espaciotemporal
+
+&lt;br&gt;
+
+&lt;img src="images/logo_latinr.png" width="15%" height="15%" style="display: block; margin: auto;" /&gt;
+
+&lt;br&gt;
+Rafael Zambrano
+
+Octubre 2022
+
+---
+
+
+
+
+
+
+
+
+
+
+
+&lt;style type="text/css"&gt;
+/* Table width = 100% max-width */
+.remark-slide table{width: 100%;}
+/* Change the background color to white for shaded rows (even rows) */
+.remark-slide thead, .remark-slide tr:nth-child(2n) {
+  background-color: white;
+  .tfoot .td {background-color: white}
+}
+.bold-last-item &gt; ul &gt; li:last-of-type,
+.bold-last-item &gt; ol &gt; li:last-of-type {font-weight: bold;}
+&lt;/style&gt;
+
+
+
+
+# Expositor
+
+.pull-left[
+### Rafael Zambrano
+- **Actuary / Data Scientist**
+]
+.pull-right[
+&lt;br&gt;
+&lt;br&gt;
+&lt;img src="images/imagen_b.jpeg" width="35%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Resumen
+
+
+---
+
+# Agenda
+
+#### ✅ Caso de uso
+#### ✅ Datos
+#### ✅ Modelado
+#### ✅ Resultados
+
+---
+class: chapter-slide
+
+# Caso de Uso
+
+---
+
+# Caso de Uso
+
+.pull-left[
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+&lt;img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/SUBE_frente.svg/413px-SUBE_frente.svg.png" width="35%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+
+&lt;br&gt;
+
+
+- El **Sistema Único de Boleto Electrónico (SUBE)** es una tarjeta para abonar medios de transporte público en Argentina. 
+
+- Los viajes realizados quedan registrados en un **portal de datos abiertos**. 
+
+- Se busca **proyectar** cómo será el uso de diversas líneas en los próximos días o meses. 
+
+
+]
+
+---
+
+class: chapter-slide
+
+# Datos
+
+---
+
+# Datos
+
+### Fuentes de datos
+
+* El repositorio de datps del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a delitos ocurridos, factores meteorológicos y elementos físicos del entorno cercano
+
+
+---
+
+# Datos
+
+### Esquinas de la ciudad
+
+* El punto de partida para el conteo de delitos por esquinas y la agregación de variables de entorno físico, reside en la geolocalización obtenida de las esquinas de la ciudad. 
+
+* Se obtiene un objeto geoespacial con todas las calles y avenidas de CABA, las mismas se almacenan como polígonos.
+
+* La intersección de estos polígonos permite extraer las esquinas del objeto espacial de la ciudad, para posteriormente utilizarlas como unidades de captura del delito.
+
+---
+
+# Datos
+
+### Esquinas de la ciudad
+
+Los objetos geoespaciales se obtienen a través del paquete {osmdata}.
+
+IMAGEN de las calles y avenidas de CABA
+
+---
+
+# Datos
+
+### Esquinas de la ciudad
+
+* Mediante la intercepción de las calles y avenidas se obtienen 22.048 esquinas.
+
+* Se debe seleccionar un número de esquinas óptimas a utilizar, para evitar incluir esquinas que estén muy cercanas entre sí.
+
+* Se seleccionan las esquinas que estén a una distancia de más de 300 metros entre sí, mediante un filtro de proximidad geoespacial a través del paquete “rangeBuilder”.
+
+Imagen de las esquinas sin filtrar y filtradas.
+
+---
+
+# Datos
+
+### Recuento Histórico de delitos
+
+* Los datos tienen una estructura tabular, se almacena para cada delito la fecha y ubicación de ocurrencia a través de la latitud y longitud.
+
+* Esto permite geolocalizar el delito y posteriormente agregar factores de entorno cercano a su ocurrencia.
+
+* El enfoque implementado tiene como objetivo la predicción de ocurrencia de robos, la clasificación de los tipos de delitos no se contempla.
+
+---
+
+# Datos
+
+### Recuento Histórico de delitos
+
+* El periodo de estudio inicia en diciembre del año 2017 y culmina en febrero del año 2020, se estudiaron en total 147.250 delitos.
+
+* A continuación, se presenta la distribución geográfica de la criminalidad sobre el mapa de CABA, desde diciembre del 2019 hasta el fin del periodo.
+
+
+Gráfico de densidad de delitos
+
+---
+
+# Datos
+
+### Recuento Histórico de delitos
+
+#### Asociación de robos con esquinas
+
+* Se procede a calcular el número de robos ocurridos dentro de
+un radio de 200 metros para cada esquina en cada uno de los meses analizados. 
+
+* 111.157 robos tienen asociada una esquina  
+
+* Las esquinas presentan 28 meses de observación, pero no en todos los meses registran delitos ocurridos, se excluyen aquellas esquinas que no registraron delitos en ningún mes. 
+
+IMAGEN DE DISTRIBUCIÓN DE ROBOS POR ESQUINAS.
+
+---
+
+# Datos
+
+### Variables Espaciales
+
+* Mediante elementos espaciales, se busca recrear el entorno físico cercano a la ocurrencia del robo.
+
+* Se procede a calcular el número de elementos de entorno cercano a cada una de las esquinas mediante un radio de metros definido.
+
+* Algunos elementos considerados: puntos de wifi públicos, estaciones de transporte público, comisarías, centros de salud, centros educativos, entre otros.
+
+---
+
+# Datos
+
+### Variables Temporales
+
+* Se agregaron factores meteorológicos, estos se vinculan mediante la fecha de ocurrencia de los robos.
+
+* Estos factores varían únicamente en función de la fecha, ya que todas las esquinas se ubican en la misma ciudad.
+
+* Los factores hacen referencia a la temperatura promedio mensual, las precipitaciones acumuladas en milímetros de agua, los días acumulados en el mes con precipitaciones y la velocidad máxima promedio del viento para cada mes.
+
+
+---
+
+# Datos
+
+### Construcción del Dataset
+
+* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de “ventana deslizante”, esta tecnica fue operacilaizada en el paquete {sknifedatar}.
+
+IMAGEN DE LAS VENTANAS DESPLIZANETS
+
+---
+
+# Datos
+
+### Dataset Final
+
+* El conjunto de datos definitivo para iniciar la etapa de modelado cuenta con 50 columnas y 16.198 observaciones.
+
+* Cada observación hace referencia a una esquina vista desde un mes determinado, las columnas agrupan las variables de entorno, clima y el historial de delitos ocurridos.
+
+Head del dataframe
+
+---
+
+class: chapter-slide
+
+# Modelado
+
+---
+
+# Modelado
+
+### Enfoque de Series de Tiempo
+
+* El enfoque de series temporales corresponde al modelo base de mínimo rendimiento. 
+
+* Para cada una de las esquinas se procede a utilizar el recuento histórico de robos desde diciembre del 2017 hasta noviembre del 2019.
+
+* El objetivo reside en predecir la ocurrencia de delitos desde diciembre del 2019 hasta febrero del 2020, en adelante ambos se denominan periodos de entrenamiento y validación respectivamente.
+
+---
+
+# Modelado
+
+### Enfoque de Series de Tiempo
+
+* Se implementa un modelo ingenuo, donde se establece como predicción lo ocurrido en el último trimestre en el periodo de entrenamiento.
+
+* Se utilizan modelos ARIMA y Croston.
+
+* Este último modelo es un caso especial de regresiones de conteo para series intermitentes, comportamiento evidente de muchas de las esquinas que se modelan.
+
+IMAGEN DE SERIE INTERMITENTE.
+
+---
+
+# Modelado
+
+### Enfoque de Series de Tiempo
+
+* No todas las series presentan el problema de intermitencia, por lo tanto, se propone combinar la implementación del modelo Croston con modelos ARIMA.
+
+* Se selecciona al mejor modelo que se ajuste a cada esquina.de tiempo. Esta metodología de ajuste de múltiples modelos sobre múltiples series de tiempo, se implementó mediante el paquete {sknifedatar}.
+
+IMAGEN DE ENFOQUE DE SERIES DE TIEMPO
+
+---
+
+# Modelado
+
+### Enfoque de Corte Transversal
+
+* La implementación de modelos de aprendizaje automático consiste en modelar de manera conjunta los factores temporales y espaciales.
+
+* La estrategia de validación se fundamenta en la metodología de ventanas deslizantes, siendo “n” el último valor de “t” que para cada esquina corresponde al conjunto de datos de validación. 
+
+* Para todas las esquinas, el resto de los meses constituyen los datos de entrenamiento, por lo tanto, se busca predecir lo ocurrido en los últimos 3 meses de estudio en función de lo ocurrido en los meses anteriores.
+
+IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
+
+---
+
+# Modelado
+
+### Enfoque de Corte Transversal
+
+IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
+
+---
+
+# Modelado
+
+### Enfoque de Corte Transversal
+
+* En este estudio no hace falta realizar una partición aleatoria en datos de entrenamiento y validación, debido a que ambos conjuntos de datos se obtienen a través de las fechas. 
+
+* Se implementa el modelo Extreme Gradient Boosting (XGBoost), realizando el ajuste de hiperparámetros a través de una optimización bayesiana.
+
+---
+
+# Modelado
+
+### Validación Cruzada Espacial
+
+* Para los datos geoespaciales del presente estudio, está latente la existencia de autocorrelación espacial en las esquinas de CABA, esto violaría el supuesto de independencia entre las observaciones de entrenamiento y evaluación.
+
+* Para mitigar la posible influencia de la autocorrelación espacial, se implementa una técnica de validación cruzada espacial, generando particiones mediante agrupamientos de k-medias.
+
+---
+
+# Modelado
+
+### Validación Cruzada Espacial
+
+IMAGEN DE CV ESPACIAl
+
+---
+
+# Modelado
+
+### Validación Cruzada Espacial
+
+* La validación cruzada espacial fue desarrollada mediante el paquete {spatialsample}, perteneciente al ecosistema {tidymodels}
+
+* Vale destacar que todo el desarrollo de modelado se realizó mediante los distintos paquetes de {tidymodels}.
+
+IMAGEN DE TIDYMODELS Y spatialsample
+
+---
+
+class: chapter-slide
+
+# Resultados
+
+---
+
+# Resultados
+
+### Métricas
+
+* Para todos los modelos se observa el error cuadrático medio (RMSE) y el error absoluto medio (MAE), ambas métricas se muestran de forma habitual en el proceso de evaluación de modelos.
+
+* Se incluye tambien el error logarítmico cuadrático medio (RMSLE).
+
+* Se incluyen otro grupo de métricas complementarias, sin embargo, se mostrarán únicamente las 3 mencionadas anteriormente.
+
+
+
+---
+
+# Resultados
+
+### Modelos de series de tiempo
+
+* Se implementa un modelo ingenuo, modelos ARIMA mediante la técnica de Auto-ARIMA.
+
+* Finalmente se implementa un modelo híbrido donde compiten los modelos ARIMA y Croston, seleccionando el mejor para cada serie según el error porcentual medio arcotangente (MAAPE).
+
+
+TABLA DE SERIES DE TIEMPO
+
+---
+
+# Resultados
+
+### Modelos de aprendizaje automático
+
+* Se implementa un modelo XGBoost que incluye únicamente las variables delictivas rezagadas, denominado en las tablas de métricas  como “XGBoost robos”.
+
+* Posteriormente, se realiza la comparación con un XGBoost que contempla todos los factores temporales y espaciales, denominado “XGBoost all”.
+
+* Ambos modelos se ajustan y evalúan mediante validación cruzada estándar y espacial, verificando si existe alguna influencia relacionada con la autocorrelación espacial.
+
+
+---
+
+# Resultados
+
+### Modelos de aprendizaje automático
+
+TABLA DE METICAS XGBoost all Y XGBoos robos
+
+---
+
+class: chapter-slide
+
+# Interpretación de Modelos
+
+---
+
+# Interpretación de Modelos
+
+* Mediante los Shapley Values, se examina la contribución de las variables en la predicción del modelo “XGBoos all”.
+
+TABLA DE SHAPLEY VALUES
+
+---
+
+# Conclusiones
+
+* La incorporación de los factores temporales y del entorno físico, contribuyeron a generar mejores predicciones, siendo evidente al observar el rendimiento inferior de los modelos que únicamente toman en cuenta el historial de robos ocurridos. 
+
+* Aunque el modelo “XGBoost robos” también mostró un rendimiento superior a los modelos de series de tiempo, no permite verificar las contribuciones de factores espaciales existentes.
+
+* Las variables rezagadas referentes a la ocurrencia de robos resultaron ser las más importantes, sin embargo, variables relacionadas con el transporte público, centros educativos, locales gastronómicos y hoteles, también muestran contribuciones importantes en las predicciones.
+
+
+---
+
+## Contactos ✉
+
+* Rafael Zambrano [![Twitter Badge](https://img.shields.io/badge/-@rafa_zamr-1ca0f1?style=flat&amp;labelColor=1ca0f1&amp;logo=twitter&amp;logoColor=white&amp;link=https://twitter.com/rafa_zamr)](https://twitter.com/rafa_zamr) [![Linkedin Badge](https://img.shields.io/badge/-rafael zambrano-blue?style=flat&amp;logo=Linkedin&amp;logoColor=white&amp;link=https://www.linkedin.com/in/rafael-zambrano/)](https://www.linkedin.com/in/rafael-zambrano/) [![Github Badge](https://img.shields.io/badge/-rafzamb-black?style=flat&amp;logo=Github&amp;logoColor=white&amp;link=https://github.com/rafzamb)](https://github.com/rafzamb) [![Website Badge](https://img.shields.io/badge/-Personal%20blog-47CCCC?style=flat&amp;logo=Google-Chrome&amp;logoColor=white&amp;link=https://rafael-zambrano-blog-ds.netlify.app/)](https://rafael-zambrano-blog-ds.netlify.app/)
+
+
+
+* Articulo: "UN ENFOQUE ESPACIOTEMPORAL PARA LA PREDICCIÓN DE DELITOS EN LA CIUDAD DE BUENOS AIRES", **([link](http://www.economicas.uba.ar/wp-content/uploads/2016/04/Zambrano-Rafael-1.pdf))**
+
+* Presentación **([link](https://rafzamb.github.io/sknifedatar/))**
+
+---
+
+class: chapter-slide
+
+# Muchas Gracias!!!
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"navigation": {
+"scroll": false
+}
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
