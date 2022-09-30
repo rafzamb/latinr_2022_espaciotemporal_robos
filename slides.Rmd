@@ -1,7 +1,7 @@
 ---
-title: "Predicción de delitos mediante un enfoque espaciotemporal"
+title: "Predicción de robos mediante un enfoque espaciotemporal"
 author: "Rafael Zambrano"
-institute: "Latin R 2021"
+institute: "Latin R 2022"
 date: "12-14 de octubre de 2022"
 output:
   xaringan::moon_reader:
@@ -23,7 +23,7 @@ class: center
 
 
 
-# Predicción de delitos mediante un enfoque espaciotemporal
+# Predicción de robos mediante un enfoque espaciotemporal
 
 <br>
 
