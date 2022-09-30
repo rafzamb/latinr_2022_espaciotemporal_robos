@@ -162,9 +162,9 @@ knitr::include_graphics('images/ladron.png')
 
 - **Predicción de robos** sobre las esquinas de la Ciudad de Buenos Aires. 
 
-- Combinación de factores **temporales y esapciales** relacionados con la ocurrencia del robo. 
+- Combinación de factores **temporales y espaciales** relacionados con la ocurrencia del robo. 
 
-- Modelado **espaciotemporal** de la ocrrencia de robos.
+- Modelado **espaciotemporal** de la ocurrencia de robos.
 
 - Enfoque de series de tiempo y de datos de corte transversal.
 
@@ -185,7 +185,7 @@ class: chapter-slide
 
 ### Fuentes de datos
 
-* El repositorio de datps del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a robos ocurridos, factores meteorológicos y elementos físicos del entorno cercano a la ocurrencia de robos.
+* El repositorio de datos del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a robos ocurridos, factores meteorológicos y elementos físicos del entorno cercano a la ocurrencia de robos.
 
 
 ---
@@ -336,7 +336,7 @@ delitos_def_4$meses_con_delitos %>%
 
 ### Construcción del Dataset
 
-* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de **“ventana deslizante”**, esta tecnica fue operacilaizada en el paquete {sknifedatar} 📦.
+* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de **“ventana deslizante”**,  esta técnica fue operacionalizada en el paquete {sknifedatar} 📦.
 
 
 ```{r, out.width='80%', fig.align='center', echo=FALSE}
@@ -508,7 +508,7 @@ class: chapter-slide
 
 * Para todos los modelos se observa el error cuadrático medio (RMSE) y el error absoluto medio (MAE), ambas métricas se muestran de forma habitual en el proceso de evaluación de modelos.
 
-* Se incluye tambien el error logarítmico cuadrático medio (RMSLE).
+* Se incluye también el error logarítmico cuadrático medio (RMSLE).
 
 * Se incluyen otro grupo de métricas complementarias, sin embargo, se mostrarán únicamente las 3 mencionadas anteriormente.
 
