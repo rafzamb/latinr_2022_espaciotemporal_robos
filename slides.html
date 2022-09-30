@@ -8,6 +8,8 @@
     <link href="slides_files/panelset-0.2.6/panelset.css" rel="stylesheet" />
     <script src="slides_files/panelset-0.2.6/panelset.js"></script>
     <script src="slides_files/xaringanExtra-progressBar-0.0.1/progress-bar.js"></script>
+    <link href="slides_files/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+    <script src="slides_files/pagedtable-1.1/js/pagedtable.js"></script>
     <link rel="stylesheet" href="latinR.css" type="text/css" />
   </head>
   <body>
@@ -75,11 +77,6 @@ Octubre 2022
 
 ---
 
-## Resumen
-
-
----
-
 # Agenda
 
 #### ✅ Caso de uso
@@ -105,7 +102,7 @@ class: chapter-slide
 &lt;br&gt;
 &lt;br&gt;
 
-&lt;img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/SUBE_frente.svg/413px-SUBE_frente.svg.png" width="35%" style="display: block; margin: auto;" /&gt;
+&lt;img src="images/ladron.png" width="70%" style="display: block; margin: auto;" /&gt;
 ]
 
 .pull-right[
@@ -113,11 +110,15 @@ class: chapter-slide
 &lt;br&gt;
 
 
-- El **Sistema Único de Boleto Electrónico (SUBE)** es una tarjeta para abonar medios de transporte público en Argentina. 
+- **Predicción de robos** sobre las esquinas de la Ciudad de Buenos Aires. 
 
-- Los viajes realizados quedan registrados en un **portal de datos abiertos**. 
+- Combinación de factores **temporales y esapciales** relacionados con la ocurrencia del robo. 
 
-- Se busca **proyectar** cómo será el uso de diversas líneas en los próximos días o meses. 
+- Modelado **espaciotemporal** de la ocrrencia de robos.
+
+- Enfoque de series de tiempo y de datos de corte transversal.
+
+- Uso intensivo del ecosistema **{tidymodels}** y sus extensiones.
 
 
 ]
@@ -134,7 +135,7 @@ class: chapter-slide
 
 ### Fuentes de datos
 
-* El repositorio de datps del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a delitos ocurridos, factores meteorológicos y elementos físicos del entorno cercano
+* El repositorio de datps del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a robos ocurridos, factores meteorológicos y elementos físicos del entorno cercano a la ocurrencia de robos.
 
 
 ---
@@ -155,9 +156,11 @@ class: chapter-slide
 
 ### Esquinas de la ciudad
 
-Los objetos geoespaciales se obtienen a través del paquete {osmdata}.
+Los objetos geoespaciales se obtienen a través del paquete {osmdata} 📦. A continuación, se muestran los polígonos de las principales calles y avenidas de CABA.
 
-IMAGEN de las calles y avenidas de CABA
+
+&lt;img src="images/calles.png" width="50%" style="display: block; margin: auto;" /&gt;
+
 
 ---
 
@@ -169,11 +172,21 @@ IMAGEN de las calles y avenidas de CABA
 
 * Se debe seleccionar un número de esquinas óptimas a utilizar, para evitar incluir esquinas que estén muy cercanas entre sí.
 
-* Se seleccionan las esquinas que estén a una distancia de más de 300 metros entre sí, mediante un filtro de proximidad geoespacial a través del paquete “rangeBuilder”.
+* Se seleccionan las esquinas que estén a una distancia de más de 300 metros entre sí, mediante un filtro de proximidad geoespacial a través del paquete {rangeBuilder} 📦.
 
-Imagen de las esquinas sin filtrar y filtradas.
 
 ---
+
+# Datos
+
+### Esquinas de la ciudad
+
+
+&lt;img src="images/esquinas.png" width="1355" style="display: block; margin: auto;" /&gt;
+
+
+---
+
 
 # Datos
 
@@ -196,7 +209,7 @@ Imagen de las esquinas sin filtrar y filtradas.
 * A continuación, se presenta la distribución geográfica de la criminalidad sobre el mapa de CABA, desde diciembre del 2019 hasta el fin del periodo.
 
 
-Gráfico de densidad de delitos
+&lt;img src="images/densidad.png" width="65%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -213,7 +226,16 @@ un radio de 200 metros para cada esquina en cada uno de los meses analizados.
 
 * Las esquinas presentan 28 meses de observación, pero no en todos los meses registran delitos ocurridos, se excluyen aquellas esquinas que no registraron delitos en ningún mes. 
 
-IMAGEN DE DISTRIBUCIÓN DE ROBOS POR ESQUINAS.
+---
+
+# Datos
+
+### Recuento Histórico de delitos
+
+#### Asociación de robos con esquinas
+
+&lt;img src="slides_files/figure-html/unnamed-chunk-12-1.png" width="55%" height="55%" style="display: block; margin: auto;" /&gt;
+
 
 ---
 
@@ -246,9 +268,11 @@ IMAGEN DE DISTRIBUCIÓN DE ROBOS POR ESQUINAS.
 
 ### Construcción del Dataset
 
-* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de “ventana deslizante”, esta tecnica fue operacilaizada en el paquete {sknifedatar}.
+* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de **“ventana deslizante”**, esta tecnica fue operacilaizada en el paquete {sknifedatar} 📦.
 
-IMAGEN DE LAS VENTANAS DESPLIZANETS
+
+&lt;img src="images/diagrama_ventanas.png" width="80%" style="display: block; margin: auto;" /&gt;
+
 
 ---
 
@@ -256,11 +280,28 @@ IMAGEN DE LAS VENTANAS DESPLIZANETS
 
 ### Dataset Final
 
-* El conjunto de datos definitivo para iniciar la etapa de modelado cuenta con 50 columnas y 16.198 observaciones.
+* El conjunto de datos definitivo para iniciar la etapa de modelado cuenta con **50 columnas y 16.198 observaciones**.
 
 * Cada observación hace referencia a una esquina vista desde un mes determinado, las columnas agrupan las variables de entorno, clima y el historial de delitos ocurridos.
 
-Head del dataframe
+
+
+
+
+
+```r
+dataset &lt;- Data_set_modelos %&gt;% filter(pliegue &gt;= 12)
+
+dataset %&gt;% head() %&gt;% rmarkdown::paged_table(list(rows.print = 6))
+```
+
+&lt;div data-pagedtable="false"&gt;
+  &lt;script data-pagedtable-source type="application/json"&gt;
+{"columns":[{"label":["id"],"name":[1],"type":["chr"],"align":["left"]},{"label":["pliegue"],"name":[2],"type":["int"],"align":["right"]},{"label":["delitos_last_year"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["delitos_last_12"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["delitos_last_6"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["delitos_last_3"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["delitos_last_1"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["delitos"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["delitos_next_3"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["meses_sin_delitos"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["mm_last_3"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["mm_last_1"],"name":[12],"type":["dbl"],"align":["right"]},{"label":["temperatura_last_3"],"name":[13],"type":["dbl"],"align":["right"]},{"label":["temperatura_last_1"],"name":[14],"type":["dbl"],"align":["right"]},{"label":["dias_last_3"],"name":[15],"type":["dbl"],"align":["right"]},{"label":["dias_last_1"],"name":[16],"type":["dbl"],"align":["right"]},{"label":["veloc_last_3"],"name":[17],"type":["dbl"],"align":["right"]},{"label":["veloc_last_1"],"name":[18],"type":["dbl"],"align":["right"]},{"label":["long"],"name":[19],"type":["dbl"],"align":["right"]},{"label":["lat"],"name":[20],"type":["dbl"],"align":["right"]},{"label":["wifi"],"name":[21],"type":["int"],"align":["right"]},{"label":["teatros"],"name":[22],"type":["int"],"align":["right"]},{"label":["gimnasios"],"name":[23],"type":["int"],"align":["right"]},{"label":["colectivo"],"name":[24],"type":["int"],"align":["right"]},{"label":["atm"],"name":[25],"type":["int"],"align":["right"]},{"label":["bancos"],"name":[26],"type":["int"],"align":["right"]},{"label":["gasolina"],"name":[27],"type":["int"],"align":["right"]},{"label":["gastronomica"],"name":[28],"type":["int"],"align":["right"]},{"label":["taxi"],"name":[29],"type":["int"],"align":["right"]},{"label":["farmacias"],"name":[30],"type":["int"],"align":["right"]},{"label":["garajes"],"name":[31],"type":["int"],"align":["right"]},{"label":["educativos"],"name":[32],"type":["int"],"align":["right"]},{"label":["organizaciones_sociales"],"name":[33],"type":["int"],"align":["right"]},{"label":["bomberos"],"name":[34],"type":["int"],"align":["right"]},{"label":["estaciones_ferrocarril"],"name":[35],"type":["int"],"align":["right"]},{"label":["bibliotecas"],"name":[36],"type":["int"],"align":["right"]},{"label":["centros_medicos_barriales"],"name":[37],"type":["int"],"align":["right"]},{"label":["centros_salud_comunitarios"],"name":[38],"type":["int"],"align":["right"]},{"label":["hospitales"],"name":[39],"type":["int"],"align":["right"]},{"label":["consulados"],"name":[40],"type":["int"],"align":["right"]},{"label":["bus_turistico"],"name":[41],"type":["int"],"align":["right"]},{"label":["carteles"],"name":[42],"type":["int"],"align":["right"]},{"label":["bocas_de_subte"],"name":[43],"type":["int"],"align":["right"]},{"label":["embajadas"],"name":[44],"type":["int"],"align":["right"]},{"label":["comisarias"],"name":[45],"type":["int"],"align":["right"]},{"label":["centros_de_salud_privados"],"name":[46],"type":["int"],"align":["right"]},{"label":["metrobus"],"name":[47],"type":["int"],"align":["right"]},{"label":["hotel_baja"],"name":[48],"type":["int"],"align":["right"]},{"label":["hotel_alta"],"name":[49],"type":["int"],"align":["right"]},{"label":["local_bailables"],"name":[50],"type":["int"],"align":["right"]},{"label":["universidades"],"name":[51],"type":["int"],"align":["right"]}],"data":[{"1":"esquina_1","2":"12","3":"1","4":"60","5":"35","6":"19","7":"7","8":"6","9":"19","10":"2","11":"638","12":"135","13":"69","14":"25","15":"30","16":"12","17":"100","18":"29","19":"-58","20":"-35","21":"3","22":"1","23":"0","24":"49","25":"1","26":"0","27":"1","28":"5","29":"2","30":"3","31":"0","32":"5","33":"0","34":"0","35":"1","36":"0","37":"1","38":"0","39":"0","40":"0","41":"0","42":"1","43":"0","44":"0","45":"0","46":"0","47":"10","48":"0","49":"0","50":"1","51":"0"},{"1":"esquina_10","2":"12","3":"5","4":"109","5":"57","6":"26","7":"8","8":"21","9":"34","10":"0","11":"638","12":"135","13":"69","14":"25","15":"30","16":"12","17":"100","18":"29","19":"-58","20":"-35","21":"5","22":"1","23":"0","24":"28","25":"4","26":"0","27":"2","28":"1","29":"2","30":"5","31":"16","32":"6","33":"0","34":"0","35":"0","36":"0","37":"1","38":"2","39":"2","40":"0","41":"0","42":"1","43":"9","44":"0","45":"1","46":"1","47":"0","48":"0","49":"2","50":"0","51":"0"},{"1":"esquina_100","2":"12","3":"6","4":"51","5":"27","6":"13","7":"6","8":"3","9":"13","10":"1","11":"638","12":"135","13":"69","14":"25","15":"30","16":"12","17":"100","18":"29","19":"-58","20":"-35","21":"1","22":"7","23":"0","24":"20","25":"4","26":"0","27":"3","28":"64","29":"2","30":"1","31":"5","32":"4","33":"0","34":"1","35":"1","36":"1","37":"0","38":"2","39":"0","40":"0","41":"0","42":"0","43":"0","44":"0","45":"0","46":"0","47":"3","48":"4","49":"1","50":"12","51":"0"},{"1":"esquina_1000","2":"12","3":"1","4":"52","5":"30","6":"15","7":"7","8":"1","9":"3","10":"2","11":"638","12":"135","13":"69","14":"25","15":"30","16":"12","17":"100","18":"29","19":"-58","20":"-35","21":"3","22":"1","23":"0","24":"26","25":"3","26":"0","27":"1","28":"7","29":"2","30":"4","31":"5","32":"5","33":"0","34":"0","35":"3","36":"1","37":"0","38":"1","39":"1","40":"0","41":"0","42":"0","43":"0","44":"0","45":"0","46":"0","47":"0","48":"0","49":"0","50":"0","51":"0"},{"1":"esquina_1001","2":"12","3":"1","4":"32","5":"25","6":"11","7":"1","8":"5","9":"10","10":"5","11":"638","12":"135","13":"69","14":"25","15":"30","16":"12","17":"100","18":"29","19":"-58","20":"-35","21":"0","22":"0","23":"2","24":"17","25":"0","26":"0","27":"0","28":"3","29":"0","30":"2","31":"7","32":"13","33":"0","34":"0","35":"0","36":"0","37":"1","38":"0","39":"1","40":"0","41":"0","42":"0","43":"0","44":"1","45":"0","46":"0","47":"1","48":"1","49":"0","50":"0","51":"0"},{"1":"esquina_1002","2":"12","3":"17","4":"183","5":"92","6":"56","7":"21","8":"18","9":"44","10":"0","11":"638","12":"135","13":"69","14":"25","15":"30","16":"12","17":"100","18":"29","19":"-58","20":"-35","21":"1","22":"7","23":"0","24":"27","25":"5","26":"0","27":"1","28":"13","29":"3","30":"4","31":"17","32":"10","33":"0","34":"0","35":"0","36":"1","37":"0","38":"2","39":"1","40":"0","41":"0","42":"0","43":"0","44":"0","45":"0","46":"2","47":"0","48":"0","49":"4","50":"0","51":"5"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[6],"max":[6]},"pages":{}}}
+  &lt;/script&gt;
+&lt;/div&gt;
+
+
 
 ---
 
@@ -292,7 +333,7 @@ class: chapter-slide
 
 * Este último modelo es un caso especial de regresiones de conteo para series intermitentes, comportamiento evidente de muchas de las esquinas que se modelan.
 
-IMAGEN DE SERIE INTERMITENTE.
+&lt;img src="images/serie_intermitente.png" width="45%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -302,9 +343,9 @@ IMAGEN DE SERIE INTERMITENTE.
 
 * No todas las series presentan el problema de intermitencia, por lo tanto, se propone combinar la implementación del modelo Croston con modelos ARIMA.
 
-* Se selecciona al mejor modelo que se ajuste a cada esquina.de tiempo. Esta metodología de ajuste de múltiples modelos sobre múltiples series de tiempo, se implementó mediante el paquete {sknifedatar}.
+* Se selecciona al mejor modelo que se ajuste a cada esquina.de tiempo. Esta metodología de ajuste de múltiples modelos sobre múltiples series de tiempo, se implementó mediante el paquete {sknifedatar}📦.
 
-IMAGEN DE ENFOQUE DE SERIES DE TIEMPO
+&lt;img src="images/series_modelado.png" width="90%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -318,15 +359,21 @@ IMAGEN DE ENFOQUE DE SERIES DE TIEMPO
 
 * Para todas las esquinas, el resto de los meses constituyen los datos de entrenamiento, por lo tanto, se busca predecir lo ocurrido en los últimos 3 meses de estudio en función de lo ocurrido en los meses anteriores.
 
-IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
-
 ---
 
 # Modelado
 
 ### Enfoque de Corte Transversal
 
-IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
+
+```r
+train &lt;- dataset %&gt;% filter(pliegue != 24)
+
+test &lt;- dataset %&gt;% filter(pliegue == 24)
+```
+
+
+&lt;img src="images/diagrama_train.png" width="941" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -352,9 +399,12 @@ IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
 
 # Modelado
 
-### Validación Cruzada Espacial
+* **Validación Cruzada**
 
-IMAGEN DE CV ESPACIAl
+&lt;img src="images/cv_n.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+* **Validación Cruzada Espacial**
+&lt;img src="images/cv_s.png" width="60%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -362,11 +412,11 @@ IMAGEN DE CV ESPACIAl
 
 ### Validación Cruzada Espacial
 
-* La validación cruzada espacial fue desarrollada mediante el paquete {spatialsample}, perteneciente al ecosistema {tidymodels}
+* La validación cruzada espacial fue desarrollada mediante el paquete **{spatialsample}**📦, perteneciente al ecosistema {tidymodels}📦.
 
 * Vale destacar que todo el desarrollo de modelado se realizó mediante los distintos paquetes de {tidymodels}.
 
-IMAGEN DE TIDYMODELS Y spatialsample
+&lt;img src="images/logo_spatialsample.png" width="30%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -387,7 +437,6 @@ class: chapter-slide
 * Se incluyen otro grupo de métricas complementarias, sin embargo, se mostrarán únicamente las 3 mencionadas anteriormente.
 
 
-
 ---
 
 # Resultados
@@ -399,7 +448,372 @@ class: chapter-slide
 * Finalmente se implementa un modelo híbrido donde compiten los modelos ARIMA y Croston, seleccionando el mejor para cada serie según el error porcentual medio arcotangente (MAAPE).
 
 
-TABLA DE SERIES DE TIEMPO
+<div id="ogjmfkocqt" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#ogjmfkocqt .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#ogjmfkocqt .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#ogjmfkocqt .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#ogjmfkocqt .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#ogjmfkocqt .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#ogjmfkocqt .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#ogjmfkocqt .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#ogjmfkocqt .gt_group_heading {
+  padding: 8px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ogjmfkocqt .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ogjmfkocqt .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#ogjmfkocqt .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#ogjmfkocqt .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#ogjmfkocqt .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#ogjmfkocqt .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ogjmfkocqt .gt_first_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ogjmfkocqt .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#ogjmfkocqt .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 4px;
+}
+
+#ogjmfkocqt .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ogjmfkocqt .gt_sourcenote {
+  font-size: 90%;
+  padding: 4px;
+}
+
+#ogjmfkocqt .gt_left {
+  text-align: left;
+}
+
+#ogjmfkocqt .gt_center {
+  text-align: center;
+}
+
+#ogjmfkocqt .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#ogjmfkocqt .gt_font_normal {
+  font-weight: normal;
+}
+
+#ogjmfkocqt .gt_font_bold {
+  font-weight: bold;
+}
+
+#ogjmfkocqt .gt_font_italic {
+  font-style: italic;
+}
+
+#ogjmfkocqt .gt_super {
+  font-size: 65%;
+}
+
+#ogjmfkocqt .gt_footnote_marks {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 65%;
+}
+</style>
+<table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1">modelo</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">mae</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">rmse</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_right" rowspan="1" colspan="1">rmsle</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td class="gt_row gt_left">Ingenuo</td>
+<td class="gt_row gt_right">3.341</td>
+<td class="gt_row gt_right">4.725</td>
+<td class="gt_row gt_right">0.553</td></tr>
+    <tr><td class="gt_row gt_left">AutoARIMA</td>
+<td class="gt_row gt_right">3.375</td>
+<td class="gt_row gt_right">4.876</td>
+<td class="gt_row gt_right">0.522</td></tr>
+    <tr><td class="gt_row gt_left">AutoARIMA-Croston</td>
+<td class="gt_row gt_right">3.184</td>
+<td class="gt_row gt_right">4.624</td>
+<td class="gt_row gt_right">0.494</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
 
 ---
 
@@ -420,21 +834,14 @@ TABLA DE SERIES DE TIEMPO
 
 ### Modelos de aprendizaje automático
 
-TABLA DE METICAS XGBoost all Y XGBoos robos
+* **XGBoost all** 
 
----
+&lt;img src="images/xgb_all.png" width="50%" style="display: block; margin: auto;" /&gt;
 
-class: chapter-slide
 
-# Interpretación de Modelos
+* **XGBoos robos**
 
----
-
-# Interpretación de Modelos
-
-* Mediante los Shapley Values, se examina la contribución de las variables en la predicción del modelo “XGBoos all”.
-
-TABLA DE SHAPLEY VALUES
+&lt;img src="images/xgb_robos.png" width="50%" style="display: block; margin: auto;" /&gt;
 
 ---
 
@@ -451,13 +858,13 @@ TABLA DE SHAPLEY VALUES
 
 ## Contactos ✉
 
-* Rafael Zambrano [![Twitter Badge](https://img.shields.io/badge/-@rafa_zamr-1ca0f1?style=flat&amp;labelColor=1ca0f1&amp;logo=twitter&amp;logoColor=white&amp;link=https://twitter.com/rafa_zamr)](https://twitter.com/rafa_zamr) [![Linkedin Badge](https://img.shields.io/badge/-rafael zambrano-blue?style=flat&amp;logo=Linkedin&amp;logoColor=white&amp;link=https://www.linkedin.com/in/rafael-zambrano/)](https://www.linkedin.com/in/rafael-zambrano/) [![Github Badge](https://img.shields.io/badge/-rafzamb-black?style=flat&amp;logo=Github&amp;logoColor=white&amp;link=https://github.com/rafzamb)](https://github.com/rafzamb) [![Website Badge](https://img.shields.io/badge/-Personal%20blog-47CCCC?style=flat&amp;logo=Google-Chrome&amp;logoColor=white&amp;link=https://rafael-zambrano-blog-ds.netlify.app/)](https://rafael-zambrano-blog-ds.netlify.app/)
+* **Rafael Zambrano** [![Twitter Badge](https://img.shields.io/badge/-@rafa_zamr-1ca0f1?style=flat&amp;labelColor=1ca0f1&amp;logo=twitter&amp;logoColor=white&amp;link=https://twitter.com/rafa_zamr)](https://twitter.com/rafa_zamr) [![Linkedin Badge](https://img.shields.io/badge/-rafael zambrano-blue?style=flat&amp;logo=Linkedin&amp;logoColor=white&amp;link=https://www.linkedin.com/in/rafael-zambrano/)](https://www.linkedin.com/in/rafael-zambrano/) [![Github Badge](https://img.shields.io/badge/-rafzamb-black?style=flat&amp;logo=Github&amp;logoColor=white&amp;link=https://github.com/rafzamb)](https://github.com/rafzamb) [![Website Badge](https://img.shields.io/badge/-Personal%20blog-47CCCC?style=flat&amp;logo=Google-Chrome&amp;logoColor=white&amp;link=https://rafael-zambrano-blog-ds.netlify.app/)](https://rafael-zambrano-blog-ds.netlify.app/)
 
 
 
-* Articulo: "UN ENFOQUE ESPACIOTEMPORAL PARA LA PREDICCIÓN DE DELITOS EN LA CIUDAD DE BUENOS AIRES", **([link](http://www.economicas.uba.ar/wp-content/uploads/2016/04/Zambrano-Rafael-1.pdf))**
+* **Articulo**: "UN ENFOQUE ESPACIOTEMPORAL PARA LA PREDICCIÓN DE DELITOS EN LA CIUDAD DE BUENOS AIRES", **([link](http://www.economicas.uba.ar/wp-content/uploads/2016/04/Zambrano-Rafael-1.pdf))**
 
-* Presentación **([link](https://rafzamb.github.io/sknifedatar/))**
+* **Presentación** **([link](https://rafzamb.github.io/sknifedatar/))**
 
 ---
 

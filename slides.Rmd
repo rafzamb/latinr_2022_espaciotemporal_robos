@@ -47,15 +47,42 @@ knitr::opts_chunk$set(warning = FALSE,
 
 
 ```{r, echo=FALSE}
-library(sknifedatar)
-library(modeltime)
-library(workflowsets)
-library(tidymodels)
 library(tidyverse)
-library(timetk)
-library(anomalize) 
-library(lubridate)
 library(gt)
+library(rlang)
+library(tidymodels)
+
+rmsle_vec <- function(truth, estimate, na_rm = TRUE, ...) {
+  rmsle_impl <- function(truth, estimate) {
+    sqrt(mean((log(truth + 1) - log(estimate + 1))^2))
+  }
+  
+  metric_vec_template(
+    metric_impl = rmsle_impl,
+    truth = truth,
+    estimate = estimate,
+    na_rm = na_rm,
+    cls = "numeric",
+    ...
+  )
+}
+
+rmsle <- function(data, ...) {
+  UseMethod("rmsle")
+}
+rmsle <- new_numeric_metric(rmsle, direction = "minimize")
+
+rmsle.data.frame <- function(data, truth, estimate, na_rm = TRUE, ...) {
+  metric_summarizer(
+    metric_nm = "rmsle",
+    metric_fn = rmsle_vec,
+    data = data,
+    truth = !!enquo(truth),
+    estimate = !!enquo(estimate),
+    na_rm = na_rm,
+    ...
+  )
+}
 ```
 
 
@@ -98,11 +125,6 @@ knitr::include_graphics('images/imagen_b.jpeg')
 
 ---
 
-## Resumen
-
-
----
-
 # Agenda
 
 #### ✅ Caso de uso
@@ -128,8 +150,8 @@ class: chapter-slide
 <br>
 <br>
 
-```{r, out.width='35%', fig.align='center', echo=FALSE}
-knitr::include_graphics('https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/SUBE_frente.svg/413px-SUBE_frente.svg.png')
+```{r, out.width='70%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/ladron.png')
 ```
 ]
 
@@ -138,11 +160,15 @@ knitr::include_graphics('https://upload.wikimedia.org/wikipedia/commons/thumb/1/
 <br>
 
 
-- El **Sistema Único de Boleto Electrónico (SUBE)** es una tarjeta para abonar medios de transporte público en Argentina. 
+- **Predicción de robos** sobre las esquinas de la Ciudad de Buenos Aires. 
 
-- Los viajes realizados quedan registrados en un **portal de datos abiertos**. 
+- Combinación de factores **temporales y esapciales** relacionados con la ocurrencia del robo. 
 
-- Se busca **proyectar** cómo será el uso de diversas líneas en los próximos días o meses. 
+- Modelado **espaciotemporal** de la ocrrencia de robos.
+
+- Enfoque de series de tiempo y de datos de corte transversal.
+
+- Uso intensivo del ecosistema **{tidymodels}** y sus extensiones.
 
 
 ]
@@ -159,7 +185,7 @@ class: chapter-slide
 
 ### Fuentes de datos
 
-* El repositorio de datps del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a delitos ocurridos, factores meteorológicos y elementos físicos del entorno cercano
+* El repositorio de datps del Gobierno de la Ciudad Autónoma de Buenos Aires **([link](https://data.buenosaires.gob.ar/dataset/))**,es la principal y única fuente de datos, desde este lugar se extraen los datos referentes a robos ocurridos, factores meteorológicos y elementos físicos del entorno cercano a la ocurrencia de robos.
 
 
 ---
@@ -180,9 +206,13 @@ class: chapter-slide
 
 ### Esquinas de la ciudad
 
-Los objetos geoespaciales se obtienen a través del paquete {osmdata}.
+Los objetos geoespaciales se obtienen a través del paquete {osmdata} 📦. A continuación, se muestran los polígonos de las principales calles y avenidas de CABA.
 
-IMAGEN de las calles y avenidas de CABA
+
+```{r, out.width='50%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/calles.png')
+```
+
 
 ---
 
@@ -194,11 +224,23 @@ IMAGEN de las calles y avenidas de CABA
 
 * Se debe seleccionar un número de esquinas óptimas a utilizar, para evitar incluir esquinas que estén muy cercanas entre sí.
 
-* Se seleccionan las esquinas que estén a una distancia de más de 300 metros entre sí, mediante un filtro de proximidad geoespacial a través del paquete “rangeBuilder”.
+* Se seleccionan las esquinas que estén a una distancia de más de 300 metros entre sí, mediante un filtro de proximidad geoespacial a través del paquete {rangeBuilder} 📦.
 
-Imagen de las esquinas sin filtrar y filtradas.
 
 ---
+
+# Datos
+
+### Esquinas de la ciudad
+
+
+```{r, fig.align='center', echo=FALSE}
+knitr::include_graphics('images/esquinas.png')
+```
+
+
+---
+
 
 # Datos
 
@@ -221,7 +263,9 @@ Imagen de las esquinas sin filtrar y filtradas.
 * A continuación, se presenta la distribución geográfica de la criminalidad sobre el mapa de CABA, desde diciembre del 2019 hasta el fin del periodo.
 
 
-Gráfico de densidad de delitos
+```{r, out.width='65%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/densidad.png')
+```
 
 ---
 
@@ -238,7 +282,28 @@ un radio de 200 metros para cada esquina en cada uno de los meses analizados.
 
 * Las esquinas presentan 28 meses de observación, pero no en todos los meses registran delitos ocurridos, se excluyen aquellas esquinas que no registraron delitos en ningún mes. 
 
-IMAGEN DE DISTRIBUCIÓN DE ROBOS POR ESQUINAS.
+---
+
+# Datos
+
+### Recuento Histórico de delitos
+
+#### Asociación de robos con esquinas
+
+```{r , echo=FALSE,  out.width='55%', fig.align='center', out.height='55%'}
+delitos_def_4 <- readRDS("data/delitos_def.rds")
+
+delitos_def_4$meses_con_delitos %>% 
+  table() %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x=., y=Freq)) +
+  geom_segment( aes(x=., xend=., y=0, yend=Freq)) +
+  geom_point(size=4, color="red", alpha=0.7, shape=21, stroke=2) +
+  theme_minimal() +
+  labs(x = "Meses con delitos", y = "Número de esquinas") +
+  scale_color_grey()
+```
+
 
 ---
 
@@ -271,9 +336,13 @@ IMAGEN DE DISTRIBUCIÓN DE ROBOS POR ESQUINAS.
 
 ### Construcción del Dataset
 
-* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de “ventana deslizante”, esta tecnica fue operacilaizada en el paquete {sknifedatar}.
+* El paso final para la construcción del dataset definitivo, consiste en la implementación de la técnica de **“ventana deslizante”**, esta tecnica fue operacilaizada en el paquete {sknifedatar} 📦.
 
-IMAGEN DE LAS VENTANAS DESPLIZANETS
+
+```{r, out.width='80%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/diagrama_ventanas.png')
+```
+
 
 ---
 
@@ -281,11 +350,23 @@ IMAGEN DE LAS VENTANAS DESPLIZANETS
 
 ### Dataset Final
 
-* El conjunto de datos definitivo para iniciar la etapa de modelado cuenta con 50 columnas y 16.198 observaciones.
+* El conjunto de datos definitivo para iniciar la etapa de modelado cuenta con **50 columnas y 16.198 observaciones**.
 
 * Cada observación hace referencia a una esquina vista desde un mes determinado, las columnas agrupan las variables de entorno, clima y el historial de delitos ocurridos.
 
-Head del dataframe
+```{r, echo=FALSE}
+Data_set_modelos <- readRDS("data/Data_set_modelos.rds")
+```
+
+
+
+```{r}
+dataset <- Data_set_modelos %>% filter(pliegue >= 12)
+
+dataset %>% head() %>% rmarkdown::paged_table(list(rows.print = 6))
+```
+
+
 
 ---
 
@@ -317,7 +398,9 @@ class: chapter-slide
 
 * Este último modelo es un caso especial de regresiones de conteo para series intermitentes, comportamiento evidente de muchas de las esquinas que se modelan.
 
-IMAGEN DE SERIE INTERMITENTE.
+```{r, out.width='45%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/serie_intermitente.png')
+```
 
 ---
 
@@ -327,9 +410,11 @@ IMAGEN DE SERIE INTERMITENTE.
 
 * No todas las series presentan el problema de intermitencia, por lo tanto, se propone combinar la implementación del modelo Croston con modelos ARIMA.
 
-* Se selecciona al mejor modelo que se ajuste a cada esquina.de tiempo. Esta metodología de ajuste de múltiples modelos sobre múltiples series de tiempo, se implementó mediante el paquete {sknifedatar}.
+* Se selecciona al mejor modelo que se ajuste a cada esquina.de tiempo. Esta metodología de ajuste de múltiples modelos sobre múltiples series de tiempo, se implementó mediante el paquete {sknifedatar}📦.
 
-IMAGEN DE ENFOQUE DE SERIES DE TIEMPO
+```{r, out.width='90%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/series_modelado.png')
+```
 
 ---
 
@@ -343,15 +428,22 @@ IMAGEN DE ENFOQUE DE SERIES DE TIEMPO
 
 * Para todas las esquinas, el resto de los meses constituyen los datos de entrenamiento, por lo tanto, se busca predecir lo ocurrido en los últimos 3 meses de estudio en función de lo ocurrido en los meses anteriores.
 
-IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
-
 ---
 
 # Modelado
 
 ### Enfoque de Corte Transversal
 
-IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
+```{r, eval=FALSE}
+train <- dataset %>% filter(pliegue != 24)
+
+test <- dataset %>% filter(pliegue == 24)
+```
+
+
+```{r, fig.align='center', echo=FALSE}
+knitr::include_graphics('images/diagrama_train.png')
+```
 
 ---
 
@@ -377,9 +469,16 @@ IMAGEN DE LAS VENTANAS DESLIZANTES Y DATSAET FINAL
 
 # Modelado
 
-### Validación Cruzada Espacial
+* **Validación Cruzada**
 
-IMAGEN DE CV ESPACIAl
+```{r, out.width='60%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/cv_n.png')
+```
+
+* **Validación Cruzada Espacial**
+```{r, out.width='60%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/cv_s.png')
+```
 
 ---
 
@@ -387,11 +486,13 @@ IMAGEN DE CV ESPACIAl
 
 ### Validación Cruzada Espacial
 
-* La validación cruzada espacial fue desarrollada mediante el paquete {spatialsample}, perteneciente al ecosistema {tidymodels}
+* La validación cruzada espacial fue desarrollada mediante el paquete **{spatialsample}**📦, perteneciente al ecosistema {tidymodels}📦.
 
 * Vale destacar que todo el desarrollo de modelado se realizó mediante los distintos paquetes de {tidymodels}.
 
-IMAGEN DE TIDYMODELS Y spatialsample
+```{r, out.width='30%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/logo_spatialsample.png')
+```
 
 ---
 
@@ -412,7 +513,6 @@ class: chapter-slide
 * Se incluyen otro grupo de métricas complementarias, sin embargo, se mostrarán únicamente las 3 mencionadas anteriormente.
 
 
-
 ---
 
 # Resultados
@@ -424,7 +524,11 @@ class: chapter-slide
 * Finalmente se implementa un modelo híbrido donde compiten los modelos ARIMA y Croston, seleccionando el mejor para cada serie según el error porcentual medio arcotangente (MAAPE).
 
 
-TABLA DE SERIES DE TIEMPO
+```{r, echo=FALSE}
+tabla_ts <- readRDS("data/tabla_ts.rds")
+
+tabla_ts %>% relocate(modelo, mae) %>% gt() %>% fmt_number(2:4,decimals = 3)
+```
 
 ---
 
@@ -445,21 +549,18 @@ TABLA DE SERIES DE TIEMPO
 
 ### Modelos de aprendizaje automático
 
-TABLA DE METICAS XGBoost all Y XGBoos robos
+* **XGBoost all** 
 
----
+```{r, out.width='50%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/xgb_all.png')
+```
 
-class: chapter-slide
 
-# Interpretación de Modelos
+* **XGBoos robos**
 
----
-
-# Interpretación de Modelos
-
-* Mediante los Shapley Values, se examina la contribución de las variables en la predicción del modelo “XGBoos all”.
-
-TABLA DE SHAPLEY VALUES
+```{r, out.width='50%', fig.align='center', echo=FALSE}
+knitr::include_graphics('images/xgb_robos.png')
+```
 
 ---
 
@@ -476,13 +577,13 @@ TABLA DE SHAPLEY VALUES
 
 ## Contactos ✉
 
-* Rafael Zambrano [![Twitter Badge](https://img.shields.io/badge/-@rafa_zamr-1ca0f1?style=flat&labelColor=1ca0f1&logo=twitter&logoColor=white&link=https://twitter.com/rafa_zamr)](https://twitter.com/rafa_zamr) [![Linkedin Badge](https://img.shields.io/badge/-rafael zambrano-blue?style=flat&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/rafael-zambrano/)](https://www.linkedin.com/in/rafael-zambrano/) [![Github Badge](https://img.shields.io/badge/-rafzamb-black?style=flat&logo=Github&logoColor=white&link=https://github.com/rafzamb)](https://github.com/rafzamb) [![Website Badge](https://img.shields.io/badge/-Personal%20blog-47CCCC?style=flat&logo=Google-Chrome&logoColor=white&link=https://rafael-zambrano-blog-ds.netlify.app/)](https://rafael-zambrano-blog-ds.netlify.app/)
+* **Rafael Zambrano** [![Twitter Badge](https://img.shields.io/badge/-@rafa_zamr-1ca0f1?style=flat&labelColor=1ca0f1&logo=twitter&logoColor=white&link=https://twitter.com/rafa_zamr)](https://twitter.com/rafa_zamr) [![Linkedin Badge](https://img.shields.io/badge/-rafael zambrano-blue?style=flat&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/rafael-zambrano/)](https://www.linkedin.com/in/rafael-zambrano/) [![Github Badge](https://img.shields.io/badge/-rafzamb-black?style=flat&logo=Github&logoColor=white&link=https://github.com/rafzamb)](https://github.com/rafzamb) [![Website Badge](https://img.shields.io/badge/-Personal%20blog-47CCCC?style=flat&logo=Google-Chrome&logoColor=white&link=https://rafael-zambrano-blog-ds.netlify.app/)](https://rafael-zambrano-blog-ds.netlify.app/)
 
 
 
-* Articulo: "UN ENFOQUE ESPACIOTEMPORAL PARA LA PREDICCIÓN DE DELITOS EN LA CIUDAD DE BUENOS AIRES", **([link](http://www.economicas.uba.ar/wp-content/uploads/2016/04/Zambrano-Rafael-1.pdf))**
+* **Articulo**: "UN ENFOQUE ESPACIOTEMPORAL PARA LA PREDICCIÓN DE DELITOS EN LA CIUDAD DE BUENOS AIRES", **([link](http://www.economicas.uba.ar/wp-content/uploads/2016/04/Zambrano-Rafael-1.pdf))**
 
-* Presentación **([link](https://rafzamb.github.io/sknifedatar/))**
+* **Presentación** **([link](https://rafzamb.github.io/sknifedatar/))**
 
 ---
 
