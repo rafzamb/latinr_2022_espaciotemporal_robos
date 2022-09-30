@@ -290,7 +290,7 @@ un radio de 200 metros para cada esquina en cada uno de los meses analizados.
 
 #### Asociación de robos con esquinas
 
-```{r , echo=FALSE,  out.width='55%', fig.align='center', out.height='55%'}
+```{r , echo=FALSE,  out.width='50%', fig.align='center', out.height='50%'}
 delitos_def_4 <- readRDS("data/delitos_def.rds")
 
 delitos_def_4$meses_con_delitos %>% 
@@ -340,7 +340,7 @@ delitos_def_4$meses_con_delitos %>%
 
 
 ```{r, out.width='80%', fig.align='center', echo=FALSE}
-knitr::include_graphics('images/diagrama_ventanas.png')
+knitr::include_graphics('images/diagrama_ventanas.png') 
 ```
 
 
@@ -413,7 +413,7 @@ knitr::include_graphics('images/serie_intermitente.png')
 * Se selecciona al mejor modelo que se ajuste a cada esquina.de tiempo. Esta metodología de ajuste de múltiples modelos sobre múltiples series de tiempo, se implementó mediante el paquete {sknifedatar}📦.
 
 ```{r, out.width='90%', fig.align='center', echo=FALSE}
-knitr::include_graphics('images/series_modelado.png')
+knitr::include_graphics('images/diagramas-time_series.png')
 ```
 
 ---
@@ -467,7 +467,7 @@ knitr::include_graphics('images/diagrama_train.png')
 
 ---
 
-# Modelado
+## Modelado
 
 * **Validación Cruzada**
 
